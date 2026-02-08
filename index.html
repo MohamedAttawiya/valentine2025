@@ -56,6 +56,12 @@
       <h1 id="valentineQuestion" class="text-4xl font-bold italic text-[#bd1e59] my-4">
         Manona, will you be my Valentine?
       </h1>
+      <button
+        id="invitationButton"
+        class="hidden inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium cursor-pointer px-4 py-2 bg-[#bd1e59] text-white transition-colors hover:bg-[#9f174a] mb-3"
+      >
+        Get my invitation
+      </button>
       <p id="emailStatus" class="hidden text-sm font-medium text-[#7a1740] mb-2"></p>
       <div id="responseButtons" class="flex gap-4 pt-5 items-center">
         <button
@@ -81,6 +87,7 @@
       const noButton = document.getElementById('noButton');
       const imageDisplay = document.getElementById('imageDisplay');
       const valentineQuestion = document.getElementById('valentineQuestion');
+      const invitationButton = document.getElementById('invitationButton');
       const responseButtons = document.getElementById('responseButtons');
       const emailStatus = document.getElementById('emailStatus');
 
@@ -158,11 +165,8 @@
         imageDisplay.src = YES_IMAGE_PATHS[0];
         imageDisplay.alt = 'A favorite photo of Manona';
         valentineQuestion.textContent = 'Love you to the moon and back';
+        invitationButton.classList.remove('hidden');
         responseButtons.style.display = 'none';
-        if (!invitationRequestDone) {
-          invitationRequestDone = true;
-          sendInvitationEmail();
-        }
 
         // Show all personalized pictures after "Yes"
         let yesImageIndex = 1;
@@ -188,6 +192,23 @@
         confetti({ ...defaults, particleCount: 10, scalar: 4 });
       });
 
+      invitationButton.addEventListener('click', async () => {
+        if (invitationRequestDone) return;
+
+        invitationButton.disabled = true;
+        invitationButton.textContent = 'Sending...';
+
+        const invitationSent = await sendInvitationEmail();
+        if (invitationSent) {
+          invitationRequestDone = true;
+          invitationButton.textContent = 'Invitation sent';
+          return;
+        }
+
+        invitationButton.disabled = false;
+        invitationButton.textContent = 'Get my invitation';
+      });
+
       async function sendInvitationEmail() {
         try {
           emailStatus.textContent = 'Sending invitation...';
@@ -205,8 +226,10 @@
           }
 
           emailStatus.textContent = 'Invitation sent.';
+          return true;
         } catch (error) {
           emailStatus.textContent = 'Could not send invitation right now.';
+          return false;
         }
       }
     })();
