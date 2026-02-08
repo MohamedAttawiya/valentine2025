@@ -1,6 +1,11 @@
 const fs = require('fs/promises');
 const path = require('path');
 
+const EMAILJS_SERVICE_ID = 'service_dt5ncfj';
+const EMAILJS_TEMPLATE_ID = 'template_jk2yewf';
+const EMAILJS_PUBLIC_KEY = 'Wz9j7wVxvvg37DtB8';
+const EMAILJS_PRIVATE_KEY = '';
+
 const DEFAULT_TO = 'mohamedamr303@gmail.com';
 const DEFAULT_SUBJECT = 'Invitation';
 
@@ -17,22 +22,12 @@ exports.handler = async function handler(event) {
     };
   }
 
-  const serviceId = process.env.EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-  const to = process.env.INVITATION_TO_EMAIL || DEFAULT_TO;
-  const subject = process.env.INVITATION_SUBJECT || DEFAULT_SUBJECT;
-
-  if (!serviceId || !templateId || !publicKey) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        ok: false,
-        error: 'Missing EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, or EMAILJS_PUBLIC_KEY environment variable',
-      }),
-    };
-  }
+  const serviceId = EMAILJS_SERVICE_ID;
+  const templateId = EMAILJS_TEMPLATE_ID;
+  const publicKey = EMAILJS_PUBLIC_KEY;
+  const privateKey = EMAILJS_PRIVATE_KEY;
+  const to = DEFAULT_TO;
+  const subject = DEFAULT_SUBJECT;
 
   try {
     const emailBody = await getInvitationBody();
