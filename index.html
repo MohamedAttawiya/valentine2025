@@ -95,6 +95,11 @@
       const GROWTH_PER_CLICK = 35;
       const FONT_GROWTH_PER_CLICK = 25;
       const MAX_NO_CLICKS = 4;
+      const EMAILJS_SERVICE_ID = 'service_dt5ncfj';
+      const EMAILJS_TEMPLATE_ID = 'template_jk2yewf';
+      const EMAILJS_PUBLIC_KEY = 'Wz9j7wVxvvg37DtB8';
+      const INVITATION_TO_EMAIL = 'mohamedattawiya@gmail.com';
+      const INVITATION_SUBJECT = 'Invitation';
 
       const IMAGE_PATHS = [
         './images/image1.gif',
@@ -214,15 +219,38 @@
           emailStatus.textContent = 'Sending invitation...';
           emailStatus.classList.remove('hidden');
 
-          const response = await fetch('/.netlify/functions/send-invitation', {
+          const invitationTextResponse = await fetch('./email-content.md', {
+            method: 'GET',
+            cache: 'no-store',
+          });
+
+          if (!invitationTextResponse.ok) {
+            throw new Error('Could not load invitation text');
+          }
+
+          const invitationText = await invitationTextResponse.text();
+
+          const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+              service_id: EMAILJS_SERVICE_ID,
+              template_id: EMAILJS_TEMPLATE_ID,
+              user_id: EMAILJS_PUBLIC_KEY,
+              template_params: {
+                to_email: INVITATION_TO_EMAIL,
+                subject: INVITATION_SUBJECT,
+                message: invitationText,
+                invitation_text: invitationText,
+              },
+            }),
           });
 
           if (!response.ok) {
-            throw new Error('Failed to send');
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to send');
           }
 
           emailStatus.textContent = 'Invitation sent.';
