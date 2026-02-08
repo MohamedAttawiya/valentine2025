@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const DEFAULT_TO = 'mohamedamr303@gmail.com';
+const DEFAULT_SUBJECT = 'Invitation';
 
 async function getInvitationBody() {
   const contentPath = path.join(process.cwd(), 'email-content.md');
@@ -16,17 +17,19 @@ exports.handler = async function handler(event) {
     };
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.INVITATION_FROM_EMAIL;
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const templateId = process.env.EMAILJS_TEMPLATE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
   const to = process.env.INVITATION_TO_EMAIL || DEFAULT_TO;
-  const subject = process.env.INVITATION_SUBJECT || 'Invitation';
+  const subject = process.env.INVITATION_SUBJECT || DEFAULT_SUBJECT;
 
-  if (!apiKey || !from) {
+  if (!serviceId || !templateId || !publicKey) {
     return {
       statusCode: 500,
       body: JSON.stringify({
         ok: false,
-        error: 'Missing RESEND_API_KEY or INVITATION_FROM_EMAIL environment variable',
+        error: 'Missing EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, or EMAILJS_PUBLIC_KEY environment variable',
       }),
     };
   }
@@ -34,25 +37,35 @@ exports.handler = async function handler(event) {
   try {
     const emailBody = await getInvitationBody();
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
+    const payload = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: publicKey,
+      template_params: {
+        to_email: to,
+        subject,
+        message: emailBody,
+        invitation_text: emailBody,
+      },
+    };
+
+    if (privateKey) {
+      payload.accessToken = privateKey;
+    }
+
+    const emailJsResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        subject,
-        text: emailBody,
-      }),
+      body: JSON.stringify(payload),
     });
 
-    if (!resendResponse.ok) {
-      const resendError = await resendResponse.text();
+    if (!emailJsResponse.ok) {
+      const emailJsError = await emailJsResponse.text();
       return {
         statusCode: 502,
-        body: JSON.stringify({ ok: false, error: `Resend error: ${resendError}` }),
+        body: JSON.stringify({ ok: false, error: `EmailJS error: ${emailJsError}` }),
       };
     }
 
