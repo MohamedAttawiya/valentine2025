@@ -206,7 +206,7 @@
         const invitationSent = await sendInvitationEmail();
         if (invitationSent) {
           invitationRequestDone = true;
-          invitationButton.textContent = 'Invitation sent';
+          invitationButton.textContent = 'Open mennaemad10@yahoo.com';
           return;
         }
 
@@ -253,7 +253,7 @@
             throw new Error(errorText || 'Failed to send');
           }
 
-          emailStatus.textContent = 'Invitation sent.';
+          emailStatus.textContent = 'Open mennaemad10@yahoo.com';
           return true;
         } catch (error) {
           emailStatus.textContent = 'Could not send invitation right now.';
